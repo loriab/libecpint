@@ -9,5 +9,5 @@ add_test(
 	NAME
 	  GaussianShell
 	COMMAND
-	  ${CMAKE_BINARY_DIR}/tests/units/gshell/gshell_test
+	  ${PROJECT_BINARY_DIR}/tests/units/gshell/gshell_test
 )

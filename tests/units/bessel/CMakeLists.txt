@@ -9,5 +9,5 @@ add_test(
 	NAME
 	  Bessel
 	COMMAND
-	  ${CMAKE_BINARY_DIR}/tests/units/bessel/bessel_test
+	  ${PROJECT_BINARY_DIR}/tests/units/bessel/bessel_test
 )

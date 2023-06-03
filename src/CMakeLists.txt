@@ -92,7 +92,6 @@ install(
     Faddeeva
   EXPORT
     library_interface
-    #ecpintTargets
   RUNTIME DESTINATION
     ${CMAKE_INSTALL_BINDIR}
   ARCHIVE DESTINATION
@@ -118,16 +117,14 @@ configure_package_config_file(
 )
 # Targets files
 export(
-  EXPORT 
+  EXPORT
     library_interface
-    #ecpintTargets
   FILE
     ${CMAKE_CURRENT_BINARY_DIR}/ecpint-targets.cmake
   )
 install(
   EXPORT
     library_interface
-    #ecpintTargets
   FILE
     "ecpint-targets.cmake"
   NAMESPACE
@@ -141,4 +138,3 @@ install(
     ${CMAKE_CURRENT_BINARY_DIR}/ecpint-config-version.cmake
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ecpint
 )
-

@@ -13,5 +13,5 @@ add_test(
 	NAME
 	  MultiArray
 	COMMAND
-	  ${CMAKE_BINARY_DIR}/tests/units/multiarr/multiarr_test
+	  ${PROJECT_BINARY_DIR}/tests/units/multiarr/multiarr_test
 )

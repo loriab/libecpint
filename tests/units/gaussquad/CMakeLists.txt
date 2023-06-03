@@ -9,5 +9,5 @@ add_test(
 	NAME
 	  GaussQuad
 	COMMAND
-	  ${CMAKE_BINARY_DIR}/tests/units/gaussquad/quad_test
+	  ${PROJECT_BINARY_DIR}/tests/units/gaussquad/quad_test
 )

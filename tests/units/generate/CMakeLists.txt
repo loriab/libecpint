@@ -9,5 +9,5 @@ add_test(
 	NAME
 	  Generator
 	COMMAND
-	  ${CMAKE_BINARY_DIR}/tests/units/generate/gen_test
+	  ${PROJECT_BINARY_DIR}/tests/units/generate/gen_test
 )

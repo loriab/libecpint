@@ -11,7 +11,7 @@ add_test(
 	NAME
 	  GaussianECP
 	COMMAND
-	  ${CMAKE_BINARY_DIR}/tests/units/ecp/ecp_test
+	  ${PROJECT_BINARY_DIR}/tests/units/ecp/ecp_test
 	WORKING_DIRECTORY
-	  ${CMAKE_SOURCE_DIR}/tests/units/ecp
+	  ${PROJECT_SOURCE_DIR}/tests/units/ecp
 )

@@ -9,5 +9,5 @@ add_test(
 	NAME
 	  MathUtil
 	COMMAND
-	  ${CMAKE_BINARY_DIR}/tests/units/mathutil/math_test
+	  ${PROJECT_BINARY_DIR}/tests/units/mathutil/math_test
 )

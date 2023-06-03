@@ -1,5 +1,5 @@
 find_package(Sphinx)
-find_package(Python COMPONENTS Interpreter Development)
+find_package(Python COMPONENTS Interpreter)
 
 set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/source)
 set(SPHINX_BUILD ${CMAKE_CURRENT_SOURCE_DIR}/build)

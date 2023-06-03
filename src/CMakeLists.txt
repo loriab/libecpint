@@ -49,8 +49,8 @@ target_include_directories(ecpint
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/libecpint>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/../include/libecpint>
-    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/libecpint>
-    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/libecpint>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 if (LIBECPINT_USE_CERF)
@@ -86,7 +86,23 @@ endif()
 #  Install
 # =========
 
-install(TARGETS ecpint EXPORT ecpintTargets DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(
+  TARGETS
+    ecpint
+    Faddeeva
+  EXPORT
+    library_interface
+    #ecpintTargets
+  RUNTIME DESTINATION
+    ${CMAKE_INSTALL_BINDIR}
+  ARCHIVE DESTINATION
+    ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION
+    ${CMAKE_INSTALL_LIBDIR}
+  PUBLIC_HEADER DESTINATION
+    ${CMAKE_INSTALL_INCLUDEDIR}
+  )
+
 include(CMakePackageConfigHelpers)
 # Version file
 write_basic_package_version_file(
@@ -102,15 +118,23 @@ configure_package_config_file(
 )
 # Targets files
 export(
-  EXPORT ecpintTargets
-  FILE ${CMAKE_CURRENT_BINARY_DIR}/ecpint-targets.cmake
-)
+  EXPORT 
+    library_interface
+    #ecpintTargets
+  FILE
+    ${CMAKE_CURRENT_BINARY_DIR}/ecpint-targets.cmake
+  )
 install(
-  EXPORT ecpintTargets
-  FILE ecpint-targets.cmake
-  NAMESPACE ECPINT::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ecpint
-)
+  EXPORT
+    library_interface
+    #ecpintTargets
+  FILE
+    "ecpint-targets.cmake"
+  NAMESPACE
+    ECPINT::
+  DESTINATION
+    ${CMAKE_INSTALL_LIBDIR}/cmake/ecpint
+  )
 install(
   FILES
     ${CMAKE_CURRENT_BINARY_DIR}/ecpint-config.cmake
@@ -118,4 +142,3 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ecpint
 )
 
-install(TARGETS ecpint DESTINATION ${CMAKE_INSTALL_LIBDIR})

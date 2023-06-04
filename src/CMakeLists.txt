@@ -3,22 +3,37 @@
 #  Target: generate
 # ==================
 
-add_executable(generate
-               generate.cpp
-               lib/mathutil.cpp
-               lib/angular.cpp)
+if(CMAKE_CROSSCOMPILING)
+    find_package(genecpint)
+else()
+    add_executable(generate
+                   generate.cpp
+                   lib/mathutil.cpp
+                   lib/angular.cpp)
 
-target_compile_features(generate PUBLIC cxx_std_11)
-target_include_directories(generate
-  PRIVATE
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/include/libecpint
-    ${CMAKE_CURRENT_BINARY_DIR}/../include/libecpint
-)
+    target_compile_features(generate PUBLIC cxx_std_11)
+    target_include_directories(generate
+      PRIVATE
+        ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/include/libecpint
+        ${CMAKE_CURRENT_BINARY_DIR}/../include/libecpint
+    )
+   export(
+    TARGETS
+      generate
+    FILE
+      "${CMAKE_BINARY_DIR}/genecpintConfig.cmake"
+    )
+endif()
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated")
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/generated/ecpint_gen.part" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/generated")
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/generated/qgen.part" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/generated")
+file(
+  COPY
+    "${CMAKE_CURRENT_SOURCE_DIR}/generated/ecpint_gen.part"
+    "${CMAKE_CURRENT_SOURCE_DIR}/generated/qgen.part"
+  DESTINATION
+    "${CMAKE_CURRENT_BINARY_DIR}/generated"
+  )
 find_package (Python COMPONENTS Interpreter)
 execute_process(COMMAND ${Python_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/makelist.py" "${LIBECPINT_MAX_L}" "${CMAKE_CURRENT_BINARY_DIR}")
 file(READ "${CMAKE_CURRENT_BINARY_DIR}/qlist.txt" GENERATED_SOURCES)

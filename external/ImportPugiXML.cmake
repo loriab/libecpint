@@ -8,7 +8,14 @@ find_path(PUGIXML_INCLUDE_DIR pugixml.hpp
  HINTS "/usr/local/include" "/usr/include"
 )
 
-if((NOT PUGIXML_LIBRARY) OR (NOT PUGIXML_INCLUDE_DIR))
+find_package(pugixml)
+
+if (TARGET pugixml::pugixml)
+    get_target_property(_loc pugixml::pugixml INTERFACE_LINK_LIBRARIES)
+    message(STATUS "Found pugixml: ${_loc} (found version ${pugixml_VERSION})")
+    add_library(libpugixml ALIAS pugixml::pugixml)
+
+else()
   message(STATUS "Unable to find pugixml, cloning and building ...")
 
   ExternalProject_Add(pugixml_external
@@ -28,10 +35,4 @@ if((NOT PUGIXML_LIBRARY) OR (NOT PUGIXML_INCLUDE_DIR))
   set_target_properties(libpugixml PROPERTIES IMPORTED_LOCATION ${PUGIXML_LIBRARY})
   install(FILES ${PUGIXML_LIBRARY} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-else()
-  message(STATUS "Found pugixml: ${PUGIXML_INCLUDE_DIR} ${PUGIXML_LIBRARY}")
-  add_library(libpugixml INTERFACE)
-  target_include_directories(libpugixml INTERFACE ${PUGIXML_INCLUDE_DIR})
-  target_link_libraries(libpugixml INTERFACE ${PUGIXML_LIBRARY})
-  install(TARGETS libpugixml EXPORT ecpintTargets DESTINATION lib)
 endif()

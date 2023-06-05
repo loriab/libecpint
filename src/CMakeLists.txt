@@ -93,7 +93,6 @@ else()
 endif()
 
 if(LIBECPINT_USE_PUGIXML)
-  target_include_directories(ecpint PRIVATE ${PUGIXML_INCLUDE_DIR})
   target_link_libraries(ecpint PRIVATE libpugixml)
 endif()
 

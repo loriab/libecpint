@@ -29,9 +29,20 @@
 #else
 #include "Faddeeva.hpp"
 #endif
+#include <algorithm>
 #include <iostream>
 
 namespace libecpint {
+
+namespace {
+// Smallest min(x, y) = min(aA, bB), indexed by l1 + l2, for which the closed forms below are used.
+// Below it they lose accuracy to cancellation (measured against independent quadrature: e.g. with
+// l1 + l2 = 4, relative errors 5e-6 at min(x, y) = 0.16 and 0.5 at 0.04), and the radial integral
+// is computed numerically instead. Chosen so the closed forms stay within ~1e-10 relative.
+constexpr int CLOSED_FORM_NL = 9;
+constexpr double CLOSED_FORM_MIN_XY[CLOSED_FORM_NL] = {0.0, 0.04, 0.25, 0.5, 0.6,
+                                                       0.6, 0.6,  1.0,  1.0};
+}  // namespace
 
 void RadialIntegral::compute_base_integrals(const int N_min, const int N_max, const double p,
                                             const double o_root_p, const double P1, const double P2,
@@ -218,7 +229,13 @@ void RadialIntegral::type2(const std::vector<Triple>& triples, const int nbase, 
 
             int ijk = i * 10000 + j * 100 + k;
             double result = 0.0;
-            if (a * b > MIN_EXP) {  // && b > MIN_EXP) {
+            if (i + j < CLOSED_FORM_NL && std::min(x, y) < CLOSED_FORM_MIN_XY[i + j]) {
+              // The closed forms are polynomials in 1/x, 1/y and cancel catastrophically for a
+              // diffuse primitive (small x = aA or y = bB), so integrate numerically instead.
+              std::pair<double, bool> quadval = integrate_small(k, i, j, u.a, a, b, A, B);
+              result = quadval.first;
+              if (!quadval.second) std::cout << "Quadrature failed" << std::endl;
+            } else if (a * b > MIN_EXP) {  // && b > MIN_EXP) {
               switch (ijk) {
                 case 2: {
                   result = (1) * values[0];

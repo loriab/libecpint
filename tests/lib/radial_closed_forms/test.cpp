@@ -27,10 +27,9 @@ int main() {
   RadialIntegral rad;
   rad.init(20, 1e-15, 256, 1024);
 
-  // Wrong formulas show up as O(1) errors. Valid closed forms can still lose digits to
-  // cancellation when a*A or b*B is small (up to ~4e-6 relative for (4, 4, k) with the second
-  // parameter set below), so the tolerance leaves room for that.
-  const double reltol = 1e-5;
+  // Wrong formulas show up as O(1) errors. (Small a*A or b*B, where the closed forms would cancel,
+  // is integrated numerically instead; see RadialSmallArgument.)
+  const double reltol = 1e-9;
   // u, a, b, A, B
   const std::vector<std::array<double, 5>> sets = {
       {1.2, 0.8, 0.6, 2.1, 1.7}, {3.0, 0.3, 1.1, 1.0, 2.5}, {0.5, 1.5, 0.4, 3.0, 0.8},

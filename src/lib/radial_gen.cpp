@@ -111,54 +111,39 @@ std::pair<double, bool> RadialIntegral::integrate_small(const int N, const int l
                                                         const double n, const double a,
                                                         const double b, const double A,
                                                         const double B) const {
-  int gridSize = primGrid.getN();
-  double zt = n + a + b;
-  double pt = (a * A + b * B) / zt;
-  // Reused per-thread scratch to avoid reallocating the grid and integrand table on every call
-  thread_local GCQuadrature transformedGrid;
-  transformedGrid = primGrid;
-  transformedGrid.transformRMinMax(zt, pt);
-  std::vector<double>& gridPoints = transformedGrid.getX();
+  // Radial orders beyond the closed forms. The integrand's weight is not centred on the
+  // Gaussian product (aA + bB)/zt once high-order Bessel factors are included, so a fixed
+  // window around it (the previous 128-point primGrid approach) silently loses area. As in the
+  // quadrature path of radial_quad.cpp, first integrate over [0, inf) on the adaptive small grid,
+  // falling back to the large grid on a window only if that does not converge.
+  const double zt = n + a + b;
+  const double pt = (a * A + b * B) / zt;
+  const double aA = 2.0 * a * A;
+  const double bB = 2.0 * b * B;
 
   thread_local std::vector<double> Ftab;
-  Ftab.resize(gridSize);
+  auto tabulate = [&](const std::vector<double>& gridPoints, const int gridSize) {
+    Ftab.resize(gridSize);
+    for (int i = 0; i < gridSize; i++) {
+      const double z = gridPoints[i];
+      const double zA = z - A;
+      const double zB = z - B;
+      Ftab[i] = FAST_POW[N](z) * exp(-n * z * z - a * zA * zA - b * zB * zB) *
+                bessie.calculate(aA * z, l1) * bessie.calculate(bB * z, l2);
+    }
+  };
 
-  double z, zA, zB, besselValue1, besselValue2;
-  double aA = 2.0 * a * A;
-  double bB = 2.0 * b * B;
+  tabulate(smallGrid.getX(), smallGrid.getN());
+  std::pair<double, bool> result =
+      smallGrid.integrate(Ftab.data(), tolerance, 0, smallGrid.getN() - 1);
+  if (result.second) return result;
 
-  z = gridPoints[0];
-  zA = z - A;
-  zB = z - B;
-  besselValue1 = bessie.calculate(aA * z, l1);
-  besselValue2 = bessie.calculate(bB * z, l2);
-  Ftab[0] =
-      FAST_POW[N](z) * exp(-n * z * z - a * zA * zA - b * zB * zB) * besselValue1 * besselValue2;
-
-  int i = 1;
-  double TOL = tolerance;  ////(double(gridSize));
-  bool not_in_tail = true;
-  double delta = 1.0;
-  while (not_in_tail && i < gridSize) {
-    z = gridPoints[i];
-    zA = z - A;
-    zB = z - B;
-
-    besselValue1 = bessie.calculate(aA * z, l1);
-    besselValue2 = bessie.calculate(bB * z, l2);
-    Ftab[i] =
-        FAST_POW[N](z) * exp(-n * z * z - a * zA * zA - b * zB * zB) * besselValue1 * besselValue2;
-
-    delta = Ftab[i] - Ftab[i - 1];
-    not_in_tail = (Ftab[i] > TOL) || (delta > 0);
-    i++;
-  }
-
-  for (int j = i; j < gridSize; j++) Ftab[j] = 0.0;
-
-  // There should be no instances where this fails, so no backup plan to large grid, but return
-  // check just in case
-  return transformedGrid.integrate(Ftab.data(), 1e-12, 0, primGrid.getN() - 1);
+  // Reused per-thread scratch to avoid reallocating the grid on every call
+  thread_local GCQuadrature transformedGrid;
+  transformedGrid = bigGrid;
+  transformedGrid.transformRMinMax(zt, pt);
+  tabulate(transformedGrid.getX(), transformedGrid.getN());
+  return transformedGrid.integrate(Ftab.data(), tolerance, 0, transformedGrid.getN() - 1);
 }
 
 void RadialIntegral::type2(const std::vector<Triple>& triples, const int nbase, const int lam,

@@ -332,9 +332,9 @@ void RadialIntegral::type2(const std::vector<Triple>& triples, const int nbase, 
                 }
 
                 case 10110: {
-                  result += (-1 / (4 * x * y)) * values[6];
+                  result += (4 / (2 * x * y)) * values[6];
                   result += (-(p / 2 + y2) / (x * y)) * values[8];
-                  result += (1 / (2 * x)) * values[7];
+                  result += (-4 / x) * values[7];
                   result += (p / x) * values[9];
                   break;
                 }

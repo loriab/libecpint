@@ -167,6 +167,19 @@ void RadialIntegral::type2(const std::vector<Triple>& triples, const int nbase, 
   // buffer suffices - this avoids a heap allocation in the innermost loop.
   std::vector<double> base_integrals(nbase + 2);
 
+  // Radial integrals without a usable closed form are integrated numerically. Per primitive pair,
+  // the exponential factor and every Bessel order on the quadrature grid are shared by all such
+  // triples, so they are tabulated once (lazily) rather than per triple.
+  int lmaxA = 0, lmaxB = 0;
+  for (const Triple& t : triples) {
+    lmaxA = std::max(lmaxA, std::get<1>(t));
+    lmaxB = std::max(lmaxB, std::get<2>(t));
+  }
+  const int nq = smallGrid.getN();
+  const std::vector<double>& rq = smallGrid.getX();
+  std::vector<double> expq(nq), Kqa((lmaxA + 1) * nq), Kqb((lmaxB + 1) * nq), Fq(nq);
+  std::vector<double> bes(std::max(lmaxA, lmaxB) + 1);
+
   // Loop over primitives in ECP, only considering correct ang. momentum
   for (const auto& u : U.gaussians) {
     if (u.l == lam) {
@@ -183,6 +196,29 @@ void RadialIntegral::type2(const std::vector<Triple>& triples, const int nbase, 
           double p = u.a + a + b;
           double x = a * A;
           double y = b * B;
+
+          bool tables_built = false;
+          auto quadrature = [&](const int kk, const int ii, const int jj) {
+            if (!tables_built) {
+              for (int g = 0; g < nq; g++) {
+                const double r = rq[g], rA = r - A, rB = r - B;
+                expq[g] = std::exp(-u.a * r * r - a * rA * rA - b * rB * rB);
+                std::fill(bes.begin(), bes.end(), 0.0);
+                bessie.calculate(2.0 * x * r, lmaxA, bes);
+                for (int l = 0; l <= lmaxA; l++) Kqa[l * nq + g] = bes[l];
+                std::fill(bes.begin(), bes.end(), 0.0);
+                bessie.calculate(2.0 * y * r, lmaxB, bes);
+                for (int l = 0; l <= lmaxB; l++) Kqb[l * nq + g] = bes[l];
+              }
+              tables_built = true;
+            }
+            for (int g = 0; g < nq; g++)
+              Fq[g] = FAST_POW[kk](rq[g]) * expq[g] * Kqa[ii * nq + g] * Kqb[jj * nq + g];
+            std::pair<double, bool> q = smallGrid.integrate(Fq.data(), tolerance, 0, nq - 1);
+            if (!q.second) q = integrate_small(kk, ii, jj, u.a, a, b, A, B);  // windowed large grid
+            if (!q.second) std::cout << "Quadrature failed" << std::endl;
+            return q.first;
+          };
 
           double P1 = (x + y) / p;
           double P2 = (y - x) / p;
@@ -232,9 +268,7 @@ void RadialIntegral::type2(const std::vector<Triple>& triples, const int nbase, 
             if (i + j < CLOSED_FORM_NL && std::min(x, y) < CLOSED_FORM_MIN_XY[i + j]) {
               // The closed forms are polynomials in 1/x, 1/y and cancel catastrophically for a
               // diffuse primitive (small x = aA or y = bB), so integrate numerically instead.
-              std::pair<double, bool> quadval = integrate_small(k, i, j, u.a, a, b, A, B);
-              result = quadval.first;
-              if (!quadval.second) std::cout << "Quadrature failed" << std::endl;
+              result = quadrature(k, i, j);
             } else if (a * b > MIN_EXP) {  // && b > MIN_EXP) {
               switch (ijk) {
                 case 2: {
@@ -827,17 +861,13 @@ void RadialIntegral::type2(const std::vector<Triple>& triples, const int nbase, 
 
                 default: {
                   if (estimate_type2(k, i, j, u.a, a, b, A, B) > tolerance) {
-                    std::pair<double, bool> quadval = integrate_small(k, i, j, u.a, a, b, A, B);
-                    result = quadval.first;
-                    if (!quadval.second) std::cout << "Quadrature failed" << std::endl;
+                    result = quadrature(k, i, j);
                   }
                 }
               }
             } else {
               if (estimate_type2(k, i, j, u.a, a, b, A, B) > tolerance) {
-                std::pair<double, bool> quadval = integrate_small(k, i, j, u.a, a, b, A, B);
-                result = quadval.first;
-                if (!quadval.second) std::cout << "Quadrature failed" << std::endl;
+                result = quadrature(k, i, j);
               }
             }
 

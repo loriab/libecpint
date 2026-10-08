@@ -285,6 +285,15 @@ void GCQuadrature::transformRMinMax(const double z, const double p) {
   }
 }
 
+void GCQuadrature::transformInterval(const double rmin, const double rmax) {
+  const double half = 0.5 * (rmax - rmin);
+  const double mid = 0.5 * (rmax + rmin);
+  for (int i = 0; i < maxN; i++) {
+    x[i] = half * x[i] + mid;
+    w[i] *= half;
+  }
+}
+
 void GCQuadrature::untransformRMinMax(const double z, const double p) {
   double osz = 1.0 / sqrt(z);
 

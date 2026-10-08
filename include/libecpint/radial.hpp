@@ -51,7 +51,7 @@ class RadialIntegral {
   GCQuadrature bigGrid;
   /// The smaller integration grid, default for the type 2 integrals
   GCQuadrature smallGrid;
-  /// Untransformed copy of the smaller grid, mapped onto a finite window for numerical type 2
+  /// Grid of the smaller size (one-point scheme), mapped onto a finite window for numerical type 2
   /// radial integrals of off-centre primitives
   GCQuadrature primGrid;
   /// Modified spherical Bessel function of the first kind

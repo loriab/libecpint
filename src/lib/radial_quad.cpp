@@ -35,8 +35,8 @@ RadialIntegral::RadialIntegral() {}
 
 void RadialIntegral::init(int maxL, double tol, int small, int large) {
   bigGrid.initGrid(large, ONEPOINT);
+  primGrid.initGrid(small, ONEPOINT);
   smallGrid.initGrid(small, TWOPOINT);
-  primGrid = smallGrid;
   smallGrid.transformZeroInf();
 
   bessie.init(maxL, 1600, 200, tol);
